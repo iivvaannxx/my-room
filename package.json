@@ -1,0 +1,20 @@
+{
+	"name": "app",
+	"private": true,
+	"version": "0.0.0",
+	"type": "module",
+	"scripts": {
+		"dev": "vite",
+		"build": "tsc && vite build",
+		"preview": "vite preview",
+		"postinstall": "lefthook install"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "1.5.3",
+		"typescript": "^5.3.3",
+		"vite": "^5.1.4"
+	},
+	"dependencies": {
+		"lefthook": "^1.6.1"
+	}
+}
