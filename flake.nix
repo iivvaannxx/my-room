@@ -18,12 +18,15 @@
       fhsEnv = pkgs.buildFHSUserEnv {
         
         name = "project-env";
-        targetPkgs = pkgs: [
+        targetPkgs = pkgs: with pkgs; [
 
-          # The packages used within the project.
-          pkgs.bun
-          upkgs.biome
-        ];
+          bun
+          cowsay
+
+        ] ++ (with upkgs; [
+
+          biome
+        ]);
       };
 
     in {
@@ -34,8 +37,6 @@
         shellHook = ''
 
           echo "Entering the project environment..."
-          echo -n "The following packages are available: ${fhsEnv}"
-
           exec ${fhsEnv}/bin/project-env
         '';
       };
