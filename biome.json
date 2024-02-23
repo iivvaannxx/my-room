@@ -16,7 +16,7 @@
 		"formatter": {
 			"arrowParentheses": "always",
 			"bracketSameLine": false,
-			"bracketSpacing": false,
+			"bracketSpacing": true,
 			"enabled": true,
 			"jsxQuoteStyle": "double",
 			"quoteProperties": "preserve",
