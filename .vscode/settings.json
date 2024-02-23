@@ -17,7 +17,7 @@
 		"source.organizeImports.biome": "always"
 	},
 
-	"explorerExclude.backup": { },
+	"explorerExclude.backup": {},
 	"files.exclude": {
 		"**/.git": true,
 		"**/.svn": true,

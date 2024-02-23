@@ -12,31 +12,32 @@
     mkFlake = system: let
 
       # The set of packages to be used.
-      pkgs = import nixpkgs { inherit system; };
       upkgs = import unstablepkgs { inherit system; };
+      pkgs = import nixpkgs { 
+        
+        inherit system; 
+        config.allowUnfree = true; 
+      };
 
       fhsEnv = pkgs.buildFHSUserEnv {
         
         name = "project-env";
-        targetPkgs = pkgs: with pkgs; [
+        targetPkgs = pkgs: [
 
-          bun
-          cowsay
-
-        ] ++ (with upkgs; [
-
-          biome
-        ]);
+          # The packages used within the project.
+          pkgs.bun
+          upkgs.biome
+        ];
       };
 
     in {
 
       devShells.default = pkgs.mkShell {
 
+        # The packages used within the project.
         buildInputs = [ fhsEnv ];
         shellHook = ''
 
-          echo "Entering the project environment..."
           exec ${fhsEnv}/bin/project-env
         '';
       };
