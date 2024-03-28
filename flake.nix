@@ -19,14 +19,17 @@
         config.allowUnfree = true; 
       };
 
+      env-name = "my-room";
       fhsEnv = pkgs.buildFHSUserEnv {
         
-        name = "project-env";
+        name = "${env-name}";
         targetPkgs = pkgs: [
 
           # The packages used within the project.
+          pkgs.nodejs-slim
           pkgs.bun
-          upkgs.biome
+
+          pkgs.biome
         ];
       };
 
@@ -38,7 +41,7 @@
         buildInputs = [ fhsEnv ];
         shellHook = ''
 
-          exec ${fhsEnv}/bin/project-env
+          exec ${fhsEnv}/bin/${env-name}
         '';
       };
     };

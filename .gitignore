@@ -18,3 +18,5 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+blender/

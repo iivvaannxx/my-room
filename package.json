@@ -1,21 +1,42 @@
 {
-	"name": "app",
-	"private": true,
-	"version": "0.0.0",
-	"type": "module",
-	"scripts": {
-		"dev": "vite",
-		"build": "tsc && vite build",
-		"preview": "vite preview",
-		"postinstall": "lefthook install"
-	},
-	"devDependencies": {
-		"@biomejs/biome": "1.5.3",
-		"typescript": "^5.3.3",
-		"vite": "^5.1.4"
-	},
-	"dependencies": {
-		"lefthook": "^1.6.1",
-		"three-engine": "link:three-engine"
-	}
+  "name": "app",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "postinstall": "lefthook install",
+    "lint": "biome lint --no-errors-on-unmatched --files-ignore-unknown=true .",
+    "check": "biome check --no-errors-on-unmatched --files-ignore-unknown=true .",
+    "format": "biome format --write --no-errors-on-unmatched --files-ignore-unknown=true .",
+    "fix": "biome check --apply --no-errors-on-unmatched --files-ignore-unknown=true ."
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^19.2.1",
+    "@commitlint/config-conventional": "^19.1.0",
+    "@commitlint/types": "^19.0.3",
+    "@tweakpane/core": "^2.0.3",
+    "@types/three": "^0.162.0",
+    "autoprefixer": "^10.4.19",
+    "lefthook": "^1.6.7",
+    "postcss": "^8.4.38",
+    "tailwindcss": "^3.4.1",
+    "type-fest": "^4.14.0",
+    "typescript": "^5.4.3",
+    "vite": "^5.2.6",
+    "vite-plugin-top-level-await": "^1.4.1",
+    "vite-tsconfig-paths": "^4.3.2"
+  },
+  "dependencies": {
+    "@biomejs/biome": "^1.6.3",
+    "@datastructures-js/priority-queue": "^6.3.1",
+    "camelcase": "^8.0.0",
+    "gsap": "^3.12.5",
+    "normalize-wheel-es": "^1.2.0",
+    "three": "^0.162.0",
+    "tweakpane": "^4.0.3"
+  },
+  "trustedDependencies": ["@biomejs/biome"]
 }

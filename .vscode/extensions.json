@@ -1,3 +1,7 @@
 {
-	"recommendations": ["biomejs.biome", "usernamehw.errorlens"]
+  "recommendations": [
+    "biomejs.biome",
+    "usernamehw.errorlens",
+    "bradlc.vscode-tailwindcss"
+  ]
 }

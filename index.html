@@ -1,20 +1,68 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="w-full h-full overflow-hidden">
 
 <head>
 
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
+  <meta itemprop="name" content="My Room in 3D">
+  <meta itemprop="description" content="A (quite a bit more) fancy replica of my room.">
+  <meta itemprop="image" content="https://my-room.pages.dev/og.png">
+
   <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-  <title>My Room</title>
+  <link rel="stylesheet" href="./source/app.css" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+
+  <title>My Room In 3D</title>
 
 </head>
 
-<body>
+<body class="w-full h-full text-white overflow-hidden">
 
-  <div id="app"></div>
-  <script type="module" src="/source/main.ts"></script>
+  <div id="loading-overlay"
+    class="fixed bg-black z-[100000] flex justify-center items-center flex-col inset-0 w-full h-full">
+
+    <div class="w-full h-full max-w-2xl flex flex-col justify-center">
+
+      <p class="font-sans mb-8 font-medium text-center text-xl">
+        Made with <span class="inline-block animate-beat">❤️</span> by <a
+          class="text-blue-300 visited:text-blue-300 hover:underline" href="https://github.com/iivvaannxx"
+          target="_blank">@iivvaannxx</a>
+      </p>
+
+      <div class="relative w-full h-2">
+        <div class="absolute m-auto inset-0 bg-white opacity-25 rounded-full"></div>
+        <div id="progress" class="absolute m-auto inset-0 bg-white rounded-full opacity-100"></div>
+      </div>
+
+      <p class="mt-4 font-sans font-bold flex justify-between px-4">
+        <span id="loading-status-text"></span>
+        <span id="loading-status-percentage">0%</span>
+      </p>
+
+    </div>
+
+    <div id="light" class="fixed w-28 h-28 opacity-0 pointer-events-none top-0 left-0 will-change-transform">
+      <span id="start-text"
+        class="absolute w-full -bottom-6 mx-auto text-center font-sans font-extrabold text-xs uppercase">
+        Click <br /> To Start
+      </span>
+    </div>
+
+  </div>
+
+  <main id="app" class="fixed inset-0 w-full h-full"></main>
+  <footer class="fixed bottom-0 px-8 py-6 font-sans font-medium">
+    My Room in 3D by Ivan Porto Wigner
+    (<a class="underline" target="_blank" rel="noopener noreferrer" href="https://github.com/iivvaannxx/my-room">Source
+      Code</a>)
+  </footer>
+
+  <script type="module" src="./source/app.ts"></script>
 
 </body>
 

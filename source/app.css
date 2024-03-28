@@ -1,0 +1,55 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+
+  --progress: 0;
+}
+
+html,
+body {
+  -webkit-tap-highlight-color: transparent;
+}
+
+#progress {
+
+  transform-origin: left center;
+  transform: scaleX(var(--progress));
+}
+
+#light {
+
+  background: radial-gradient(rgba(255, 255, 255, 0.6), transparent, transparent);
+}
+
+.animate-beat {
+  animation: beat 1s infinite;
+}
+
+@keyframes beat {
+
+  0%,
+  100% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.15);
+  }
+}
+
+@keyframes fade-out {
+
+  from {
+    opacity: 1;
+  }
+
+  to {
+    opacity: 0;
+  }
+}
+
+.fade-out {
+  animation: fade-out 0.7s ease-out forwards;
+}
