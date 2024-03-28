@@ -144,14 +144,16 @@ export class MyRoomScene extends Scene {
     keyboardLight.material = new MeshBasicMaterial({ color: 0xccddbf });
     this.add(keyboardLight);
 
-    const { screen } = this.addBatchedModel("bed", bakes.bed.high, ["Screen"] as const);
+    const { phoneScreen } = this.addBatchedModel("bed", bakes.bed.high, [
+      "Phone Screen"
+    ] as const);
     const { dana, mainMonitorScreen, auxiliaryMonitorScreen } = this.addBatchedModel(
       "props1",
       bakes.props1.high,
       ["Dana", "Main Monitor Screen", "Auxiliary Monitor Screen"] as const
     );
 
-    this.addMeshWithVideoTexture(screen, battery);
+    this.addMeshWithVideoTexture(phoneScreen, battery);
     this.addMeshWithVideoTexture(mainMonitorScreen, coding);
     this.addMeshWithVideoTexture(auxiliaryMonitorScreen, inspiration);
 
