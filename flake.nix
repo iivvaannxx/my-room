@@ -27,8 +27,9 @@
 
           # The packages used within the project.
           pkgs.nodejs-slim
-          pkgs.bun
+          upkgs.nodePackages_latest.pnpm
 
+          pkgs.bun
           pkgs.biome
         ];
       };
