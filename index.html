@@ -37,7 +37,7 @@
   <div id="loading-overlay"
     class="fixed bg-black z-[100000] flex justify-center items-center flex-col inset-0 w-full h-full">
 
-    <div class="w-full h-full max-w-2xl flex flex-col justify-center">
+    <div class="w-4/5 h-full max-w-2xl flex flex-col justify-center">
 
       <p class="font-sans mb-8 font-medium text-center text-xl">
         Made with <span class="inline-block animate-beat">❤️</span> by <a
@@ -51,8 +51,8 @@
       </div>
 
       <p class="mt-4 font-sans font-bold flex justify-between px-4">
-        <span id="loading-status-text"></span>
-        <span id="loading-status-percentage">0%</span>
+        <span id="loading-status-text" class="text-sm md:text-base"></span>
+        <span id="loading-status-percentage" class="text-sm md:text-base">0%</span>
       </p>
 
     </div>
@@ -67,7 +67,7 @@
   </div>
 
   <main id="app" class="fixed inset-0 w-full h-full"></main>
-  <footer class="fixed bottom-0 px-8 py-6 font-sans font-medium">
+  <footer class="fixed bottom-0 px-8 py-6 font-sans font-medium w-full text-sm text-center md:text-base md:text-left">
     My Room in 3D by Ivan Porto Wigner
     (<a class="underline" target="_blank" rel="noopener noreferrer" href="https://github.com/iivvaannxx/my-room">Source
       Code</a>)
