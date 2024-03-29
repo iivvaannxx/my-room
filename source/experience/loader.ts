@@ -1,5 +1,7 @@
-import { $ } from "@app/utils/misc";
 import gsap from "gsap";
+import type { Camera, Scene, WebGLRenderer } from "three";
+
+import { $ } from "@app/utils/misc";
 
 // The DOM nodes that display the loading status.
 const progressText = $("#loading-status-text") as HTMLSpanElement;
@@ -37,15 +39,40 @@ export function onAssetLoaded(justLoadedUrl: string) {
   });
 
   if (count === TOTAL_ASSETS) {
-    progressText.textContent = "Resources Loaded Successfully | Click To Start";
-
     const startText = $("#start-text") as HTMLDivElement;
     startText.style.display = "block";
   }
 }
 
+/**
+ * Preloads the scene and camera for rendering using a WebGLRenderer.
+ *
+ * @param renderer - The WebGLRenderer used for rendering.
+ * @param scene - The scene to be rendered.
+ * @param camera - The camera used for rendering.
+ * @param onReady - A callback function to be called when the preloading is complete.
+ */
+export function preload(
+  renderer: WebGLRenderer,
+  scene: Scene,
+  camera: Camera,
+  onReady: () => void
+) {
+  // See: https://github.com/pmndrs/drei/blob/master/src/core/Preload.tsx
+  renderer.compileAsync(scene, camera).then(() => {
+    progressText.textContent = "SCENE LOADED | Click anywhere to start";
+
+    // When clicked, it will be removed.
+    prepareOverlayForRemoval(() => {
+      // The timeout is to allow the spotlight to fade out.
+      progressText.textContent = "Starting...";
+      onReady();
+    });
+  });
+}
+
 /** Prepares the overlay for removal after getting clicked. */
-export function prepareOverlayForRemoval(onClick?: () => void) {
+function prepareOverlayForRemoval(onClick?: () => void) {
   const overlay = $("#loading-overlay") as HTMLDivElement;
 
   overlay.addEventListener(

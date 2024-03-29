@@ -1,9 +1,9 @@
 import {
+  Box3,
+  DoubleSide,
   type Mesh,
   MeshBasicMaterial,
   type MeshBasicMaterialParameters,
-  type OrthographicCamera,
-  type PerspectiveCamera,
   Scene,
   type Texture,
   Vector2,
@@ -12,8 +12,7 @@ import {
 } from "three";
 
 import { loadModels, loadTextures, loadVideos } from "@app/assets/loaders";
-import { Camera, CameraMode } from "@app/experience/camera";
-import { Navigation } from "@app/experience/navigation";
+import { CameraMode, DoubleCamera } from "@app/experience/camera";
 
 import { DigitalClock } from "@app/props/clock";
 import { batchGLTFModel } from "@app/utils/batching";
@@ -52,9 +51,10 @@ export class MyRoomScene extends Scene {
   public readonly renderer: WebGLRenderer;
 
   // The camera and navigation controls.
-  public readonly camera: Camera;
-  private readonly _orthoNavigation: Navigation<OrthographicCamera>;
-  private readonly _perspectiveNavigation: Navigation<PerspectiveCamera>;
+  public readonly camera: DoubleCamera;
+
+  /** The container of the renderer. */
+  public readonly target: HTMLElement;
 
   // The resources used in the scene.
   private _models!: SceneModels;
@@ -77,6 +77,7 @@ export class MyRoomScene extends Scene {
     super();
 
     this.renderer = renderer;
+    this.target = target;
 
     // We'll use the full window size.
     const [width, height] = [window.innerWidth, window.innerHeight];
@@ -85,32 +86,11 @@ export class MyRoomScene extends Scene {
 
     target.appendChild(this.renderer.domElement);
     this.camera = this.prepareCamera();
-
-    this._orthoNavigation = new Navigation(this.camera.orthographic, {
-      initialRadius: 1.5,
-      spherical: { limits: { radius: { min: 0.8, max: 4 } } },
-      target
-    });
-
-    this._perspectiveNavigation = new Navigation(this.camera.perspective, {
-      initialRadius: 5,
-      target
-    });
   }
 
   /** Renders the scene using the current renderer and camera. */
-  public update({ deltaMillis }: { deltaSeconds: number; deltaMillis: number }) {
-    const size = this.renderer.getSize(new Vector2());
-    const smallestSide = Math.min(size.width, size.height);
-
-    if (this.camera.mode === CameraMode.Perspective) {
-      this._perspectiveNavigation.update(deltaMillis, smallestSide);
-    }
-
-    if (this.camera.mode === CameraMode.Orthographic) {
-      this._orthoNavigation.update(deltaMillis, smallestSide);
-    }
-
+  public update(delta: number) {
+    this.camera.controls.update(delta);
     this.renderer.render(this, this.camera.current);
   }
 
@@ -125,6 +105,38 @@ export class MyRoomScene extends Scene {
     this._videos = videos;
 
     this.setGUI();
+  }
+
+  /** Prepares the GUI options for the scene. */
+  public setGUI() {
+    const guiPane = new Pane();
+    addControls(guiPane, {
+      onCameraModeChange: (mode) => {
+        this.camera.switchTo(mode);
+      },
+
+      onClockModeChange: (mode, setUIValues) => {
+        if (mode === "current") {
+          this._clock.syncWithUserTime();
+        } else {
+          // Update the UI values with the current clock time.
+          setUIValues(this._clock.hours, this._clock.minutes);
+          this._clock.stopUserTimeSync();
+        }
+      },
+
+      onClockChange: (hours, minutes) => {
+        if (this._clock.synced) {
+          return;
+        }
+
+        this._clock.setTime(hours, minutes);
+      },
+
+      onNeutralChange: (isNeutral) => {
+        isNeutral ? this.setNeutralMaterials() : this.setColorMaterials();
+      }
+    });
   }
 
   /** Setups the entire scene. */
@@ -176,38 +188,6 @@ export class MyRoomScene extends Scene {
     this.add(...Object.values(clockObjects));
   }
 
-  /** Prepares the GUI options for the scene. */
-  public setGUI() {
-    const guiPane = new Pane();
-    addControls(guiPane, {
-      onCameraModeChange: (mode) => {
-        this.camera.switchTo(mode);
-      },
-
-      onClockModeChange: (mode, setUIValues) => {
-        if (mode === "current") {
-          this._clock.syncWithUserTime();
-        } else {
-          // Update the UI values with the current clock time.
-          setUIValues(this._clock.hours, this._clock.minutes);
-          this._clock.stopUserTimeSync();
-        }
-      },
-
-      onClockChange: (hours, minutes) => {
-        if (this._clock.synced) {
-          return;
-        }
-
-        this._clock.setTime(hours, minutes);
-      },
-
-      onNeutralChange: (isNeutral) => {
-        isNeutral ? this.setNeutralMaterials() : this.setColorMaterials();
-      }
-    });
-  }
-
   /** Here we execute all the code that needs to run after user interaction. */
   public onAfterUserInteracted() {
     this._videos.battery.source.play();
@@ -221,12 +201,10 @@ export class MyRoomScene extends Scene {
       const mesh = this._meshes[meshName];
       resetMaterials(mesh);
 
-      console.log("Setting neutral for", meshName, mesh);
-
       const { high } = this._textures.bakes[meshName];
       preprocessTextureForGLTF(high.lightmap);
 
-      mesh.material = new MeshBasicMaterial({ map: high.lightmap });
+      mesh.material = new MeshBasicMaterial({ map: high.lightmap, side: DoubleSide });
     };
 
     for (const meshName in this._meshes) {
@@ -243,7 +221,7 @@ export class MyRoomScene extends Scene {
       const { high } = this._textures.bakes[meshName];
       preprocessTextureForGLTF(high.color);
 
-      mesh.material = new MeshBasicMaterial({ map: high.color });
+      mesh.material = new MeshBasicMaterial({ map: high.color, side: DoubleSide });
     };
 
     for (const meshName in this._meshes) {
@@ -289,7 +267,12 @@ export class MyRoomScene extends Scene {
       preprocessTextureForGLTF(texture);
     }
 
-    mesh.material = new MeshBasicMaterial({ map: texture, ...extraParams });
+    mesh.material = new MeshBasicMaterial({
+      map: texture,
+      side: DoubleSide,
+      ...extraParams
+    });
+
     this.add(mesh);
   }
 
@@ -317,7 +300,7 @@ export class MyRoomScene extends Scene {
     const orthoSize = 6.5;
 
     // We'll be using the two camera modes for this scene.
-    const camera = new Camera(CameraMode.Perspective, {
+    const camera = new DoubleCamera(CameraMode.Perspective, {
       perspective: [75, aspect, near, far],
       orthographic: [
         (orthoSize * aspect) / -2,
@@ -345,6 +328,48 @@ export class MyRoomScene extends Scene {
 
     camera.current.lookAt(new Vector3(0, 2, 0));
     camera.current.position.set(4, 4, 4);
+
+    camera.initControls({
+      target: this.target,
+
+      configure: (controls) => {
+        const boxCenter = new Vector3(0, 1.25, 0);
+        const boxSize = new Vector3(1.75, 2.5, 1.75);
+        const box = new Box3();
+
+        box.setFromCenterAndSize(boxCenter, boxSize);
+        controls.setBoundary(box);
+
+        controls.minAzimuthAngle = -Math.PI / 2;
+        controls.maxAzimuthAngle = 0;
+        controls.maxPolarAngle = (Math.PI / 2) * 0.8;
+        controls.dollyToCursor = true;
+        controls.azimuthAngle = -Math.PI / 4;
+
+        controls.smoothTime = 0.325;
+        controls.draggingSmoothTime = 0.15;
+        controls.truckSpeed = 1.6;
+      },
+
+      configureForPerspective: (controls) => {
+        controls.minDistance = 0.75;
+        controls.maxDistance = 5;
+
+        // Initial camera placement.
+        controls.moveTo(0, 0.5, 0, false);
+        controls.dolly(3, false);
+      },
+
+      configureForOrthographic: (controls) => {
+        controls.minZoom = 1;
+        controls.maxZoom = 8;
+
+        // Initial camera placement.
+        controls.moveTo(0, 1, 0, false);
+        controls.zoom(0.75, false);
+      }
+    });
+
     return camera;
   }
 }

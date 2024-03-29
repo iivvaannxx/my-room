@@ -26,13 +26,10 @@ function calculateMouseOpacity(x: number, y: number) {
  */
 export function setupMouseSpotlight() {
   const light = $("#light") as HTMLDivElement;
-  let show = false;
-  let x = 0;
-  let y = 0;
 
   const followMouse = (event: MouseEvent) => {
-    x = event.clientX;
-    y = event.clientY;
+    const x = event.clientX;
+    const y = event.clientY;
 
     gsap.to(light, {
       x: x - light.offsetWidth / 2,
@@ -41,10 +38,8 @@ export function setupMouseSpotlight() {
       ease: "sine.out"
     });
 
-    if (show) {
-      const opacity = calculateMouseOpacity(x, y);
-      gsap.to(light, { opacity, duration: 0.1, ease: "sine.out" });
-    }
+    const opacity = calculateMouseOpacity(x, y);
+    gsap.to(light, { opacity, duration: 0.1, ease: "sine.out" });
   };
 
   const fadeOutLight = () => {
@@ -54,21 +49,10 @@ export function setupMouseSpotlight() {
   document.addEventListener("mousemove", followMouse);
   document.addEventListener("mouseleave", fadeOutLight);
 
-  return {
-    showSpotlight: () => {
-      // TODO: Fix the lag when the light is shown for the first time.
-      // This is a temporary fix.
-      setTimeout(() => {
-        gsap.to(light, { opacity: 1, duration: 0.2, ease: "sine.out" });
-        show = true;
-      }, 300);
-    },
+  return () => {
+    fadeOutLight();
 
-    disposeSpotlight: () => {
-      fadeOutLight();
-
-      document.removeEventListener("mousemove", followMouse);
-      document.removeEventListener("mouseleave", fadeOutLight);
-    }
+    document.removeEventListener("mousemove", followMouse);
+    document.removeEventListener("mouseleave", fadeOutLight);
   };
 }
