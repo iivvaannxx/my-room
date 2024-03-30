@@ -300,7 +300,7 @@ export class MyRoomScene extends Scene {
     const orthoSize = 6.5;
 
     // We'll be using the two camera modes for this scene.
-    const camera = new DoubleCamera(CameraMode.Perspective, {
+    const camera = new DoubleCamera(CameraMode.Orthographic, {
       perspective: [75, aspect, near, far],
       orthographic: [
         (orthoSize * aspect) / -2,
