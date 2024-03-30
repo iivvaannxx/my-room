@@ -2,7 +2,7 @@ import { CameraMode } from "@app/experience/camera";
 import type { FolderApi, Pane } from "tweakpane";
 
 const generalParams = {
-  Camera: "perspective",
+  Camera: "orthographic",
   Clock: "current",
   Hours: 0,
   Minutes: 0
