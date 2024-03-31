@@ -1,18 +1,20 @@
 {
   inputs = {
 
-    nixpkgs.url = "github:NixOS/nixpkgs/master";
-    unstablepkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     flake-utils.url = "github:numtide/flake-utils";
+
+    # Until the XZ vulnerability is cleared out. 
+    # The `xz` version in this branch seems to be unaffected.
+    # See: https://discourse.nixos.org/t/cve-2024-3094-malicious-code-in-xz-5-6-0-and-5-6-1-tarballs/42405/9
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-23.11";
   };
 
-  outputs = { self, nixpkgs, unstablepkgs, flake-utils }: let
+  outputs = { self, nixpkgs, flake-utils }: let
 
     inherit (flake-utils.lib) eachDefaultSystem;
     mkFlake = system: let
 
       # The set of packages to be used.
-      upkgs = import unstablepkgs { inherit system; };
       pkgs = import nixpkgs { 
         
         inherit system; 
@@ -27,7 +29,7 @@
 
           # The packages used within the project.
           pkgs.nodejs-slim
-          upkgs.nodePackages_latest.pnpm
+          pkgs.nodePackages_latest.pnpm
 
           pkgs.bun
           pkgs.biome
