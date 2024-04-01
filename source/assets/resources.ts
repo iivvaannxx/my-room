@@ -15,6 +15,17 @@ export type LoadedAssets<T, TAsset> = {
   [P in keyof T]: T[P] extends string ? TAsset : LoadedAssets<T[P], TAsset>;
 };
 
+/**
+ * Represents a callback function that is called when an asset is loaded.
+ * @template TAsset - The type of the asset.
+ */
+export type LoadedCallback<TAsset> = (data: {
+  path: string;
+  count: number;
+  total: number;
+  asset: TAsset;
+}) => void;
+
 /** Represents an asynchronous loader for data of type TData. */
 interface IAsyncLoader<TData> {
   /**
@@ -57,7 +68,7 @@ async function recursiveLoadPaths<TPaths extends NestedPaths<TPaths>, TAsset>(
   paths: TPaths,
   loader: IAsyncLoader<TAsset>,
   status: { count: number; total: number },
-  onJustLoaded?: (path: string, count: number, total: number) => void
+  onJustLoaded?: LoadedCallback<TAsset>
 ): Promise<LoadedAssets<TPaths, TAsset>> {
   // This is a bit of a scary function, but it's the core of the loading process.
   // It takes a simple object, this object may contain either strings (paths), or nested objects with more paths.
@@ -78,7 +89,12 @@ async function recursiveLoadPaths<TPaths extends NestedPaths<TPaths>, TAsset>(
       if (typeof value === "string") {
         // It's a path to an asset, load it.
         const asset = (await loader.loadAsync(value).catch(reject)) as TAsset;
-        onJustLoaded?.(value, ++status.count, status.total);
+        onJustLoaded?.({
+          path: value,
+          count: ++status.count,
+          total: status.total,
+          asset
+        });
 
         return [typedKey, asset];
       }
@@ -118,7 +134,7 @@ async function recursiveLoadPaths<TPaths extends NestedPaths<TPaths>, TAsset>(
 export async function asyncLoadResources<TPaths extends NestedPaths<TPaths>, TAsset>(
   paths: TPaths,
   loader: IAsyncLoader<TAsset>,
-  onJustLoaded?: (path: string, count: number, total: number) => void
+  onJustLoaded?: LoadedCallback<TAsset>
 ): Promise<LoadedAssets<TPaths, TAsset>> {
   const currentStatus = { count: 0, total: countResources(paths) };
   return recursiveLoadPaths(paths, loader, currentStatus, onJustLoaded);

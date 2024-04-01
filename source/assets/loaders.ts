@@ -1,12 +1,12 @@
-import { TextureLoader } from "three";
-
+import { type Texture, TextureLoader } from "three";
 import { DRACOLoader } from "three/addons/loaders/DRACOLoader.js";
 import { type GLTF, GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 
-import { createVideoTexture } from "@app/utils/textures";
+import { type VideoTextureSource, createVideoTexture } from "@app/utils/textures";
 
 import {
   type LoadedAssets,
+  type LoadedCallback,
   type NestedPaths,
   asyncLoadResources
 } from "@app/assets/resources";
@@ -20,7 +20,7 @@ import {
  */
 export async function loadModels<TPaths extends NestedPaths<TPaths>>(
   paths: TPaths,
-  onJustLoaded?: (path: string, count: number, total: number) => void
+  onJustLoaded?: LoadedCallback<GLTF>
 ): Promise<LoadedAssets<TPaths, GLTF>> {
   const { gltfLoader, cleanup } = getModelLoader();
 
@@ -44,7 +44,7 @@ export async function loadModels<TPaths extends NestedPaths<TPaths>>(
  */
 export async function loadTextures<TPaths extends NestedPaths<TPaths>>(
   paths: TPaths,
-  onJustLoaded?: (path: string, count: number, total: number) => void
+  onJustLoaded?: LoadedCallback<Texture>
 ) {
   const textureLoader = new TextureLoader();
   return asyncLoadResources(paths, textureLoader, onJustLoaded);
@@ -59,7 +59,7 @@ export async function loadTextures<TPaths extends NestedPaths<TPaths>>(
  */
 export async function loadVideos<TPaths extends NestedPaths<TPaths>>(
   paths: TPaths,
-  onJustLoaded?: (path: string, count: number, total: number) => void
+  onJustLoaded?: LoadedCallback<VideoTextureSource>
 ) {
   // There's no built-in loader for videos, so we fake one of our own.
   const loader = {

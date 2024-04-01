@@ -10,15 +10,6 @@ type BakeMapRecord<T = string> = Record<FileName<BakeMap>, T>;
 // A type that defines the baked maps for a model.
 export type ModelBakedMaps = BakeMapRecord<Texture>;
 
-/** The resolutions available for our maps. */
-export const BAKE_RESOLUTIONS = {
-  // low: "1K",
-  // medium: "2K",
-  high: "4K"
-  // ultra: "8K"
-} as const;
-type BakeResolutions = typeof BAKE_RESOLUTIONS;
-
 // The base URLs for our assets.
 const MODELS_BASE_URL = "/models";
 const MEDIA_BASE_URL = "/media";
@@ -45,17 +36,12 @@ function texture(name: string) {
  * @param name - The name of the map.
  * @returns An array of URLs for the baked maps.
  */
-function bakedMap<TName extends string>(name: TName, resolutions = BAKE_RESOLUTIONS) {
-  const result = {} as Record<keyof BakeResolutions, Record<FileName<BakeMap>, string>>;
+function bakedMap<TName extends string>(name: TName) {
+  const result = {} as Record<FileName<BakeMap>, string>;
 
-  for (const [resName, res] of Object.entries(resolutions)) {
-    const resKey = resName as keyof BakeResolutions;
-    result[resKey] = {} as BakeMapRecord;
-
-    for (const map of BAKE_MAPS) {
-      const mapName = removeExtension(map);
-      result[resKey][mapName] = texture(`bakes/${res}/${name}/${map}`);
-    }
+  for (const map of BAKE_MAPS) {
+    const mapName = removeExtension(map);
+    result[mapName] = texture(`bakes/${name}/${map}`);
   }
 
   return result;
@@ -79,7 +65,9 @@ export const assetsManifest = {
     room: model("room.glb"),
     tech: model("tech.glb"),
     props1: model("props1.glb"),
-    props2: model("props2.glb")
+    props2: model("props2.glb"),
+
+    digits: model("digits.glb")
   },
 
   textures: {
@@ -88,6 +76,7 @@ export const assetsManifest = {
       bed: bakedMap("bed"),
       chair: bakedMap("chair"),
       furniture: bakedMap("furniture"),
+      digits: bakedMap("bed"),
 
       room: bakedMap("room"),
       tech: bakedMap("tech"),
@@ -96,22 +85,7 @@ export const assetsManifest = {
     },
 
     misc: {
-      clock: {
-        colon: texture("clock/colon.webp"),
-        digits: {
-          0: texture("clock/digit0.webp"),
-          1: texture("clock/digit1.webp"),
-          2: texture("clock/digit2.webp"),
-          3: texture("clock/digit3.webp"),
-          4: texture("clock/digit4.webp"),
-          5: texture("clock/digit5.webp"),
-          6: texture("clock/digit6.webp"),
-          7: texture("clock/digit7.webp"),
-          8: texture("clock/digit8.webp"),
-          9: texture("clock/digit9.webp")
-        }
-      },
-
+      digits: texture("digits.webp"),
       dana: texture("dana.webp")
     }
   }
