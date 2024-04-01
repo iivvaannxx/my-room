@@ -13,16 +13,17 @@ import {
 
 import { loadModels, loadTextures, loadVideos } from "@app/assets/loaders";
 import { CameraMode, DoubleCamera } from "@app/experience/camera";
-
-import { DigitalClock } from "@app/props/clock";
+import { DigitalClock } from "@app/props/digital-clock";
 import { batchGLTFModel } from "@app/utils/batching";
 
 import { type ModelBakedMaps, assetsManifest } from "@app/assets/manifest";
 import { addControls } from "@app/experience/gui";
-import { type VideoTextureSource, preprocessTextureForGLTF } from "@app/utils/textures";
+import { preprocessTextureForGLTF } from "@app/utils/textures";
 
-import { resetMaterials } from "@app/utils/meshes";
-import { Pane } from "tweakpane";
+import { GamingChair } from "@app/props/gaming-chair";
+import { bakedBasicMaterial, resetMaterials } from "@app/utils/materials";
+
+import leafInstances from "@app/data/plant-instances.json";
 
 /**
  * Loads the assets asynchronously.
@@ -32,9 +33,17 @@ async function loadAssets(
   onJustLoaded?: (path: string, count: number, total: number) => void
 ) {
   const [models, textures, videos] = await Promise.all([
-    loadModels(assetsManifest.models, onJustLoaded),
-    loadTextures(assetsManifest.textures, onJustLoaded),
-    loadVideos(assetsManifest.media.videos, onJustLoaded)
+    loadModels(assetsManifest.models, (data) =>
+      onJustLoaded?.(data.path, data.count, data.total)
+    ),
+    loadTextures(assetsManifest.textures, ({ asset, ...rest }) => {
+      preprocessTextureForGLTF(asset);
+      onJustLoaded?.(rest.path, rest.count, rest.total);
+    }),
+    loadVideos(assetsManifest.media.videos, ({ asset, ...rest }) => {
+      preprocessTextureForGLTF(asset.texture, 0);
+      onJustLoaded?.(rest.path, rest.count, rest.total);
+    })
   ]);
 
   return { models, textures, videos };
@@ -42,9 +51,9 @@ async function loadAssets(
 
 // The types of the models, textures, and videos.
 type SceneModels = Awaited<ReturnType<typeof loadAssets>>["models"];
-type SceneMeshes = Record<keyof SceneModels, Mesh>;
-type SceneTextures = Awaited<ReturnType<typeof loadAssets>>["textures"];
 type SceneVideos = Awaited<ReturnType<typeof loadAssets>>["videos"];
+type SceneTextures = Awaited<ReturnType<typeof loadAssets>>["textures"];
+type SceneMeshes = Record<keyof SceneModels, Mesh>;
 
 export class MyRoomScene extends Scene {
   /** The instance of the renderer for this scene. */
@@ -66,6 +75,9 @@ export class MyRoomScene extends Scene {
 
   /** The digital clock over the shelf. */
   private _clock!: DigitalClock;
+
+  /** The gaming chair in front of the desk. */
+  private _chair!: GamingChair;
 
   /**
    * Represents the main scene of our app.
@@ -89,8 +101,10 @@ export class MyRoomScene extends Scene {
   }
 
   /** Renders the scene using the current renderer and camera. */
-  public update(delta: number) {
+  public update(delta: number, totalTime: number) {
     this.camera.controls.update(delta);
+    this._chair.update(totalTime);
+
     this.renderer.render(this, this.camera.current);
   }
 
@@ -109,8 +123,7 @@ export class MyRoomScene extends Scene {
 
   /** Prepares the GUI options for the scene. */
   public setGUI() {
-    const guiPane = new Pane();
-    addControls(guiPane, {
+    addControls({
       onCameraModeChange: (mode) => {
         this.camera.switchTo(mode);
       },
@@ -134,7 +147,8 @@ export class MyRoomScene extends Scene {
       },
 
       onNeutralChange: (isNeutral) => {
-        isNeutral ? this.setNeutralMaterials() : this.setColorMaterials();
+        const mode = isNeutral ? "neutral" : "color";
+        this.setSceneMaterials(mode);
       }
     });
   }
@@ -145,48 +159,42 @@ export class MyRoomScene extends Scene {
     const { bakes, misc } = this._textures;
 
     // Add all the batched models to the scene.
-    this.addBatchedModel("room", bakes.room.high);
-    this.addBatchedModel("chair", bakes.chair.high);
-    this.addBatchedModel("furniture", bakes.furniture.high);
+    this.addBatchedModel("room", bakes.room);
+    this.addBatchedModel("furniture", bakes.furniture);
 
-    const { keyboardLight } = this.addBatchedModel("tech", bakes.tech.high, [
+    const { keyboardLight } = this.addBatchedModel("tech", bakes.tech, [
       "Keyboard Light"
     ] as const);
 
     keyboardLight.material = new MeshBasicMaterial({ color: 0xccddbf });
     this.add(keyboardLight);
 
-    const { phoneScreen } = this.addBatchedModel("bed", bakes.bed.high, [
+    const { phoneScreen } = this.addBatchedModel("bed", bakes.bed, [
       "Phone Screen"
     ] as const);
     const { dana, mainMonitorScreen, auxiliaryMonitorScreen } = this.addBatchedModel(
       "props1",
-      bakes.props1.high,
+      bakes.props1,
       ["Dana", "Main Monitor Screen", "Auxiliary Monitor Screen"] as const
     );
 
-    this.addMeshWithVideoTexture(phoneScreen, battery);
-    this.addMeshWithVideoTexture(mainMonitorScreen, coding);
-    this.addMeshWithVideoTexture(auxiliaryMonitorScreen, inspiration);
+    this.addTexturedMesh(phoneScreen, battery.texture);
+    this.addTexturedMesh(mainMonitorScreen, coding.texture);
+    this.addTexturedMesh(auxiliaryMonitorScreen, inspiration.texture);
 
-    // The picture of Dana is not a video. The color is to slighly tint thet texture and match the scene.
+    // The color is to slighly tint the texture and match the scene.
     this.addTexturedMesh(dana, misc.dana, { color: 0x9473b4 });
     misc.dana.channel = 0; // I forgot to make it on UV1.
 
     // Each digit is a separate object with a separate texture.
-    const clockObjects = this.addBatchedModel("props2", bakes.props2.high, [
-      "Colon",
-      "Hour Tens",
-      "Hour Units",
-      "Minute Tens",
-      "Minute Units"
-    ] as const);
+    this.addBatchedModel("props2", bakes.props2);
 
-    this._clock = new DigitalClock(misc.clock, clockObjects);
-    this._clock.syncWithUserTime();
+    //this._clock = new DigitalClock(misc.clock, clockObjects);
+    this._chair = new GamingChair(this._models.chair, bakes.chair);
+    this._clock = new DigitalClock(this._models.digits, this._textures.misc.digits);
 
-    this.add(...Object.values(clockObjects));
-    this.camera.switchTo(CameraMode.Orthographic)
+    this.add(this._chair.mesh);
+    this.add(this._clock.digits);
   }
 
   /** Here we execute all the code that needs to run after user interaction. */
@@ -197,36 +205,18 @@ export class MyRoomScene extends Scene {
   }
 
   /** Fakes a neutral-like aspect by using the lightmaps as the scene colors. */
-  public setNeutralMaterials() {
-    const setNeutral = (meshName: keyof SceneMeshes) => {
+  public setSceneMaterials(mode: "color" | "neutral") {
+    const setMaterials = (meshName: keyof SceneMeshes) => {
       const mesh = this._meshes[meshName];
       resetMaterials(mesh);
 
-      const { high } = this._textures.bakes[meshName];
-      preprocessTextureForGLTF(high.lightmap);
-
-      mesh.material = new MeshBasicMaterial({ map: high.lightmap, side: DoubleSide });
+      const bake = this._textures.bakes[meshName];
+      const map = mode === "color" ? bake.color : bake.lightmap;
+      mesh.material = new MeshBasicMaterial({ map, side: DoubleSide });
     };
 
     for (const meshName in this._meshes) {
-      setNeutral(meshName as keyof SceneMeshes);
-    }
-  }
-
-  /** Sets the color materials for the scene. */
-  public setColorMaterials() {
-    const setColors = (meshName: keyof SceneMeshes) => {
-      const mesh = this._meshes[meshName];
-      resetMaterials(mesh);
-
-      const { high } = this._textures.bakes[meshName];
-      preprocessTextureForGLTF(high.color);
-
-      mesh.material = new MeshBasicMaterial({ map: high.color, side: DoubleSide });
-    };
-
-    for (const meshName in this._meshes) {
-      setColors(meshName as keyof SceneMeshes);
+      setMaterials(meshName as keyof SceneMeshes);
     }
   }
 
@@ -244,9 +234,10 @@ export class MyRoomScene extends Scene {
   ) {
     const modelData = this._models[model];
     const { batched, excluded } = batchGLTFModel(modelData, exclude);
+    batched.material = bakedBasicMaterial(bakes);
 
+    this.add(batched);
     this._meshes[model] = batched;
-    this.addTexturedMesh(batched, bakes.color);
 
     return excluded;
   }
@@ -256,18 +247,13 @@ export class MyRoomScene extends Scene {
    *
    * @param mesh - The mesh to add the texture to.
    * @param texture - The texture to apply to the mesh.
-   * @param preprocessForGLTF - Optional function to preprocess the texture before applying it.
+   * @param extraParams - Additional parameters for the material.
    */
   private addTexturedMesh(
     mesh: Mesh,
     texture: Texture,
-    extraParams: MeshBasicMaterialParameters = {},
-    preprocessForGLTF = true
+    extraParams: MeshBasicMaterialParameters = {}
   ) {
-    if (preprocessForGLTF) {
-      preprocessTextureForGLTF(texture);
-    }
-
     mesh.material = new MeshBasicMaterial({
       map: texture,
       side: DoubleSide,
@@ -275,20 +261,6 @@ export class MyRoomScene extends Scene {
     });
 
     this.add(mesh);
-  }
-
-  /**
-   * Adds a mesh with a video texture to the scene.
-   *
-   * @param mesh - The mesh to add.
-   * @param texture - The video texture to apply to the mesh.
-   * @param source - The video texture source.
-   */
-  private addMeshWithVideoTexture(mesh: Mesh, { texture }: VideoTextureSource) {
-    this.addTexturedMesh(mesh, texture);
-
-    // The models with video textures have their UVs set to UV0.
-    texture.channel = 0;
   }
 
   /**
@@ -353,8 +325,8 @@ export class MyRoomScene extends Scene {
       },
 
       configureForPerspective: (controls) => {
-        controls.minDistance = 0.75;
-        controls.maxDistance = 5;
+        //controls.minDistance = 0.75;
+        //controls.maxDistance = 5;
 
         // Initial camera placement.
         controls.moveTo(0, 0.5, 0, false);

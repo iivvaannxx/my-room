@@ -1,19 +1,20 @@
 import { CameraMode } from "@app/experience/camera";
-import type { FolderApi, Pane } from "tweakpane";
+import { type FolderApi, Pane } from "tweakpane";
 
-const generalParams = {
-  Camera: "orthographic",
+/** The unique instance for our GUI pane. */
+const globalPane = new Pane();
+
+/** All the tweakable params of the app. */
+const params = {
+  Camera: "perspective",
   Clock: "current",
   Hours: 0,
-  Minutes: 0
-};
-
-const styleParams = {
+  Minutes: 0,
   Neutral: false
 };
 
 /** The callbacks fired when any of the general options change. */
-type GeneralParamsCallbacks = {
+type GUICallbacks = {
   onCameraModeChange?: (mode: CameraMode) => void;
   onClockModeChange?: (
     mode: "current" | "custom",
@@ -21,14 +22,10 @@ type GeneralParamsCallbacks = {
   ) => void;
 
   onClockChange?: (hours: number, minutes: number) => void;
-};
-
-/** The callbacks fired when any of the style options change. */
-type StyleParamsCallbacks = {
   onNeutralChange?: (isNeutral: boolean) => void;
 };
 
-/**
+/*
  * Adds time controls to the given folder.
  *
  * @param folder - The pane or folder to add the time controls to.
@@ -36,11 +33,11 @@ type StyleParamsCallbacks = {
  */
 function addTimeControls(
   folder: Pane | FolderApi,
-  onClockModeChange?: GeneralParamsCallbacks["onClockModeChange"],
-  onClockChange?: GeneralParamsCallbacks["onClockChange"]
+  onClockModeChange?: GUICallbacks["onClockModeChange"],
+  onClockChange?: GUICallbacks["onClockChange"]
 ) {
   folder
-    .addBinding(generalParams, "Clock", {
+    .addBinding(params, "Clock", {
       options: {
         "Show Current Time": "current",
         "Show Custom Time": "custom"
@@ -55,20 +52,20 @@ function addTimeControls(
     });
 
   const timeFolder = folder.addFolder({ title: "Time" });
-  timeFolder.hidden = generalParams.Clock !== "custom";
+  timeFolder.hidden = params.Clock !== "custom";
 
   const hoursLimit = { min: 0, max: 23, step: 1 };
   const hoursHandle = timeFolder
-    .addBinding(generalParams, "Hours", hoursLimit)
+    .addBinding(params, "Hours", hoursLimit)
     .on("change", (controller) => {
-      onClockChange?.(controller.value, generalParams.Minutes);
+      onClockChange?.(controller.value, params.Minutes);
     });
 
   const minutesLimit = { min: 0, max: 59, step: 1 };
   const minutesHandle = timeFolder
-    .addBinding(generalParams, "Minutes", minutesLimit)
+    .addBinding(params, "Minutes", minutesLimit)
     .on("change", (controller) => {
-      onClockChange?.(generalParams.Hours, controller.value);
+      onClockChange?.(params.Hours, controller.value);
     });
 }
 
@@ -80,10 +77,10 @@ function addTimeControls(
  */
 function addCameraControls(
   folder: Pane | FolderApi,
-  onCameraModeChange?: GeneralParamsCallbacks["onCameraModeChange"]
+  onCameraModeChange?: GUICallbacks["onCameraModeChange"]
 ) {
   folder
-    .addBinding(generalParams, "Camera", {
+    .addBinding(params, "Camera", {
       options: {
         Perspective: "perspective",
         Orthographic: "orthographic"
@@ -106,9 +103,9 @@ function addCameraControls(
  */
 function addStyleControls(
   folder: Pane | FolderApi,
-  onNeutralChange?: StyleParamsCallbacks["onNeutralChange"]
+  onNeutralChange?: GUICallbacks["onNeutralChange"]
 ) {
-  folder.addBinding(styleParams, "Neutral").on("change", (controller) => {
+  folder.addBinding(params, "Neutral").on("change", (controller) => {
     onNeutralChange?.(controller.value);
   });
 }
@@ -116,17 +113,16 @@ function addStyleControls(
 /**
  * Adds camera controls to the GUI pane.
  *
- * @param onChange - A callback function that is called when the camera mode is changed.
- * @returns void
+ * @param callbacks - The callbacks to be called when any of the controls change.
+ * @returns The GUI pane.
  */
-export function addControls(
-  pane: Pane,
-  callbacks: GeneralParamsCallbacks & StyleParamsCallbacks
-) {
-  const general = pane.addFolder({ title: "Settings" });
+export function addControls(callbacks: GUICallbacks) {
+  const general = globalPane.addFolder({ title: "Settings" });
   addCameraControls(general, callbacks.onCameraModeChange);
   addTimeControls(general, callbacks.onClockModeChange, callbacks.onClockChange);
 
-  const style = pane.addFolder({ title: "Style" });
+  const style = globalPane.addFolder({ title: "Style" });
   addStyleControls(style, callbacks.onNeutralChange);
+
+  return globalPane;
 }
