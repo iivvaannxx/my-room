@@ -61,7 +61,7 @@ export function batchGLTFModel<TExcluded extends string[]>(
   const batchedMesh =
     sourceBatchedMesh ?? new BatchedMesh(geometries, vertices, vertices * 3);
 
-  const ids: number[] = [];
+  const ids: Map<string, number> = new Map();
   const excluded = {} as Record<CamelCase<TExcluded[number]>, Mesh>;
 
   forEachMesh(model.scene, (child) => {
@@ -78,7 +78,7 @@ export function batchGLTFModel<TExcluded extends string[]>(
       return;
     }
 
-    ids.push(batchMesh(child, batchedMesh));
+    ids.set(child.name, batchMesh(child, batchedMesh));
   });
 
   return { batched: batchedMesh, ids, excluded };
