@@ -14,7 +14,7 @@ function render(time: number) {
   const delta = time - previousTime;
   previousTime = time;
 
-  scene.update(delta / 1000);
+  scene.update(delta / 1000, time / 1000);
   requestAnimationFrame(render);
 }
 

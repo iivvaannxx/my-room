@@ -8,7 +8,7 @@ const progressText = $("#loading-status-text") as HTMLSpanElement;
 const progressPercentage = $("#loading-status-percentage") as HTMLSpanElement;
 
 // I'd prefer to know this dynamically but it's not worth the effort.
-const TOTAL_ASSETS = 43;
+const TOTAL_ASSETS = 32;
 let count = 0;
 
 // Tracks the progress of the loading bar.
