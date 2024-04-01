@@ -67,6 +67,7 @@ export const assetsManifest = {
     props1: model("props1.glb"),
     props2: model("props2.glb"),
 
+    plant: model("plant.glb"),
     digits: model("digits.glb")
   },
 
@@ -81,7 +82,8 @@ export const assetsManifest = {
       room: bakedMap("room"),
       tech: bakedMap("tech"),
       props1: bakedMap("props1"),
-      props2: bakedMap("props2")
+      props2: bakedMap("props2"),
+      plant: bakedMap("plant")
     },
 
     misc: {

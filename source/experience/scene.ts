@@ -23,8 +23,6 @@ import { preprocessTextureForGLTF } from "@app/utils/textures";
 import { GamingChair } from "@app/props/gaming-chair";
 import { bakedBasicMaterial, resetMaterials } from "@app/utils/materials";
 
-import leafInstances from "@app/data/plant-instances.json";
-
 /**
  * Loads the assets asynchronously.
  * @returns A promise that resolves to an object containing the loaded models and textures.
