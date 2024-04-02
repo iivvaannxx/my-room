@@ -21,3 +21,7 @@ dist-ssr
 
 blender/
 build/
+
+# Backup files and folders.
+*.backup
+*.backup/
