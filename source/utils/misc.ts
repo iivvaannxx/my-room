@@ -71,3 +71,21 @@ export function forEachOwnRecursive<T extends Record<string, unknown>>(
   // Just a shorthand for the unlimited recursive version.
   forEachOwn(obj, callback, true);
 }
+
+/**
+ * Counts the number of keys in an object recursively.
+ * @template T - The type of the object.
+ *
+ * @param obj - The object to count the keys of.
+ * @returns The number of keys in the object.
+ */
+export function countObjectKeysRecursive<T extends Record<string, unknown>>(
+  obj: T
+): number {
+  let count = 0;
+  forEachOwnRecursive(obj, () => {
+    count++;
+  });
+
+  return count;
+}
