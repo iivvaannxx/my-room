@@ -58,6 +58,9 @@ export function preload(
   camera: Camera,
   onReady: () => void
 ) {
+  progressText.textContent = "Decoding textures...";
+  // TODO: use Renderer.initTexture
+
   // See: https://github.com/pmndrs/drei/blob/master/src/core/Preload.tsx
   renderer.compileAsync(scene, camera).then(() => {
     progressText.textContent = "SCENE LOADED | Click anywhere to start";

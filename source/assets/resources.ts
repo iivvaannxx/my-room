@@ -1,3 +1,5 @@
+import { countObjectKeysRecursive } from "@app/utils/misc";
+
 /**
  * Represents a type that recursively transforms all string values in an object to the type `string`.
  * @template T - The type of the object.
@@ -34,22 +36,6 @@ interface IAsyncLoader<TData> {
    * @returns A promise that resolves to the loaded data.
    */
   loadAsync(path: string): Promise<TData>;
-}
-
-/**
- * Counts the total number of resources to load, including those nested in objects.
- *
- * @param paths The paths object, possibly nested.
- * @returns The total number of resources.
- */
-function countResources<T>(paths: NestedPaths<T>): number {
-  return Object.values(paths).reduce((acc: number, value: unknown) => {
-    if (typeof value === "string") {
-      return acc + 1;
-    }
-
-    return acc + countResources(value as NestedPaths<T>);
-  }, 0);
 }
 
 /**
@@ -136,6 +122,8 @@ export async function asyncLoadResources<TPaths extends NestedPaths<TPaths>, TAs
   loader: IAsyncLoader<TAsset>,
   onJustLoaded?: LoadedCallback<TAsset>
 ): Promise<LoadedAssets<TPaths, TAsset>> {
-  const currentStatus = { count: 0, total: countResources(paths) };
+  const totalPaths = countObjectKeysRecursive(paths);
+  const currentStatus = { count: 0, total: totalPaths };
+
   return recursiveLoadPaths(paths, loader, currentStatus, onJustLoaded);
 }

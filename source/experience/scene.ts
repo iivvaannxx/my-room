@@ -1,6 +1,7 @@
 import {
   Box3,
   DoubleSide,
+  type InstancedMesh,
   type Mesh,
   MeshBasicMaterial,
   type MeshBasicMaterialParameters,
@@ -22,6 +23,9 @@ import { preprocessTextureForGLTF } from "@app/utils/textures";
 
 import { GamingChair } from "@app/props/gaming-chair";
 import { bakedBasicMaterial, resetMaterials } from "@app/utils/materials";
+
+import leafInstances from "@app/data/plant-instances.json";
+import { makeUVOffsetableBasicMaterial } from "@app/utils/instancing";
 
 /**
  * Loads the assets asynchronously.
@@ -193,6 +197,20 @@ export class MyRoomScene extends Scene {
 
     this.add(this._chair.mesh);
     this.add(this._clock.digits);
+
+    // Add the plant instances.
+    const plantInstanced = this._models.plant.scene.children[0] as InstancedMesh;
+    const leafMaterial = makeUVOffsetableBasicMaterial({
+      map: bakes.plant.color
+    });
+
+    plantInstanced.material = leafMaterial.material;
+    leafMaterial.setUVOffsets(
+      plantInstanced,
+      leafInstances.map((instance) => instance.uvOffsets) as [number, number][]
+    );
+
+    this.add(plantInstanced);
   }
 
   /** Here we execute all the code that needs to run after user interaction. */
@@ -216,6 +234,8 @@ export class MyRoomScene extends Scene {
     for (const meshName in this._meshes) {
       setMaterials(meshName as keyof SceneMeshes);
     }
+
+    this._chair.setMaterial(mode);
   }
 
   /**
@@ -255,6 +275,7 @@ export class MyRoomScene extends Scene {
     mesh.material = new MeshBasicMaterial({
       map: texture,
       side: DoubleSide,
+      transparent: true,
       ...extraParams
     });
 

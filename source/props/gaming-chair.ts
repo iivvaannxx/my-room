@@ -2,7 +2,7 @@ import type { ModelBakedMaps } from "@app/assets/manifest";
 import { batchGLTFModel } from "@app/utils/batching";
 import { bakedBasicMaterial } from "@app/utils/materials";
 
-import { type BatchedMesh, Matrix4, Vector3 } from "three";
+import { type BatchedMesh, Matrix4, MeshBasicMaterial, Vector3 } from "three";
 import type { GLTF } from "three/addons/loaders/GLTFLoader.js";
 import { degToRad, mapLinear } from "three/src/math/MathUtils.js";
 
@@ -63,6 +63,15 @@ export class GamingChair {
     );
 
     this.mesh.material = bakedBasicMaterial(this.maps);
+  }
+
+  /**
+   * Sets the material of the gaming chair based on the specified mode.
+   * @param mode - The mode of the material. Can be "color" or "neutral".
+   */
+  public setMaterial(mode: "color" | "neutral") {
+    const map = mode === "color" ? this.maps.color : this.maps.lightmap;
+    this.mesh.material = bakedBasicMaterial(this.maps, { map });
   }
 
   /**
