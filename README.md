@@ -5,6 +5,7 @@
     src=".github/assets/bed.png"
     alt="App Bed Symbol"
     height="50"
+    style="vertical-align: sub;"
   />
   &nbsp;
   My Room In 3D
@@ -62,7 +63,9 @@ Made with the great [Camera Controls](https://github.com/yomotsu/camera-controls
 
 ## ✨ Features
 
-- **Realtime Clock**: The clock over the shelves, should display the system time of the visitor's machine. You can also travel in time if you want, and change it manually!
+The UI panel on the top right is made with [Tweakpane](https://tweakpane.github.io/docs/). You can use it to interact with some objects in the scene! At the time of writing the following objects/options can be played with:
+
+- **Realtime Clock**: The clock over the shelves, should display the system time of the visitor's machine. You can also travel in time if you want, by changing it manually!
 
 <div align="center">
   <img
@@ -104,7 +107,7 @@ These are some of the things I would like to add/improve, this list may change i
 
 Some of the objects in the scene weren't fully modeled by me, I want to use this section to thank the original artists of the items below for their amazing work.
 
-- **Gaming Chair**: The original model was created by [Jayreen Reeve](https://www.blenderkit.com/asset-gallery-detail/6618bae2-6829-4baa-8229-cf4529769bfa/). I modified it to simplify the geometry and reduce the polygon count, while also making it more alike the one I have.
+- **Gaming Chair**: The original model was created by [Jayrenn Reeve](https://www.blenderkit.com/asset-gallery-detail/6618bae2-6829-4baa-8229-cf4529769bfa/). I modified it to simplify the geometry and reduce the polygon count, while also making it more alike the one I have.
 - **Nintendo Switch**: The dock was grabbed from [here](https://grabcad.com/library/nintendo-switch-dock-1), and the actual console from [Sketchfab](https://sketchfab.com/3d-models/nintendo-switch-b30e0a74899b4f9baf030d02f45ab599), by Smoggybeard. Just like the chair, I modified it a bit to reduce the polygon count.
 - **Dualsense**: The PS5 controller is now a paid model, but when I contacted the artist to let he know that I was having problems with the payment (didn't went through after several tries), he gave it to me for free, huge thanks to him. By [AIR-3D](https://www.cgtrader.com/3d-models/electronics/other/playstation-5-dualsense-controller-2e5aeea9-ef27-4f6c-a2d5-30778062359e)
 - **Razer Headset**: The headphones on the stand of the desktop were made by [leonsavelind](https://sketchfab.com/3d-models/razer-kraken-v2-88dc32e383b243c1913bde9dd42f9200).
