@@ -1,7 +1,7 @@
 {
   "name": "My Room in 3D",
   "short_name": "My Room",
-  "description": "🛏️ A (quite a bit more) fancy replica of my room.",
+  "description": "🛏️ A (quite a bit more) fancy replica of my room, in 3D.",
 
   "start_url": "/",
   "scope": "/",
