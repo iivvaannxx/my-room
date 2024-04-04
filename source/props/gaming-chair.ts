@@ -2,7 +2,7 @@ import type { ModelBakedMaps } from "@app/assets/manifest";
 import { batchGLTFModel } from "@app/utils/batching";
 import { bakedBasicMaterial } from "@app/utils/materials";
 
-import { type BatchedMesh, Matrix4, MeshBasicMaterial, Vector3 } from "three";
+import { type BatchedMesh, Matrix4, Vector3 } from "three";
 import type { GLTF } from "three/addons/loaders/GLTFLoader.js";
 import { degToRad, mapLinear } from "three/src/math/MathUtils.js";
 
