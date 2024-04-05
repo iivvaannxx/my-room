@@ -344,23 +344,19 @@ export class MyRoomScene extends Scene {
       },
 
       configureForPerspective: (controls) => {
-        //controls.minDistance = 0.75;
-        //controls.maxDistance = 5;
-
-        // Initial camera placement.
-        controls.moveTo(0, 0.5, 0, false);
-        controls.dolly(3, false);
+        controls.minDistance = 0.75;
+        controls.maxDistance = 5;
       },
 
       configureForOrthographic: (controls) => {
         controls.minZoom = 1;
         controls.maxZoom = 8;
-
-        // Initial camera placement.
-        controls.moveTo(0, 1, 0, false);
-        controls.zoom(0.75, false);
       }
     });
+
+    // Initial camera placement.
+    camera.controls.moveTo(0, 0.5, 0, false);
+    camera.controls.dolly(3, false);
 
     return camera;
   }

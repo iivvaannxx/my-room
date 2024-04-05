@@ -77,6 +77,9 @@ export class DoubleCamera {
   /** The controls for the perspective camera. */
   private _perspectiveControls?: CameraControls;
 
+  /** The function to reconfigure the camera controls. */
+  private reconfigureControls!: () => void;
+
   /**
    * Gets the mode of the camera.
    * @returns The current mode of the camera.
@@ -177,6 +180,7 @@ export class DoubleCamera {
     }
 
     this._mode = mode;
+    this.reconfigureControls();
   }
 
   /**
@@ -189,17 +193,29 @@ export class DoubleCamera {
   public initControls(controls?: CameraParams["controls"]) {
     ensureCameraControlsInstalled();
 
-    this._orthoControls = new CameraControls(this.orthographic, controls?.target);
-    this._orthoControls.enabled = this.mode === CameraMode.Orthographic;
-    controls?.configureForOrthographic?.(this._orthoControls);
+    const orthoControls = new CameraControls(this.orthographic, controls?.target);
+    orthoControls.enabled = this.mode === CameraMode.Orthographic;
+    controls?.configureForOrthographic?.(orthoControls);
+    this._orthoControls = orthoControls;
 
-    this._perspectiveControls = new CameraControls(this.perspective, controls?.target);
-    this._perspectiveControls.enabled = this.mode === CameraMode.Perspective;
-    controls?.configureForPerspective?.(this._perspectiveControls);
+    const perspectiveControls = new CameraControls(this.perspective, controls?.target);
+    perspectiveControls.enabled = this.mode === CameraMode.Perspective;
+    controls?.configureForPerspective?.(perspectiveControls);
+    this._perspectiveControls = perspectiveControls;
 
     // The general configure is for both controls.
     controls?.configure?.(this._orthoControls);
     controls?.configure?.(this._perspectiveControls);
+
+    this.reconfigureControls = () => {
+      if (this.mode === CameraMode.Perspective) {
+        controls?.configureForPerspective?.(perspectiveControls);
+      }
+
+      if (this.mode === CameraMode.Orthographic) {
+        controls?.configureForOrthographic?.(orthoControls);
+      }
+    };
 
     return this.controls;
   }
