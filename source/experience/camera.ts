@@ -220,6 +220,12 @@ export class DoubleCamera {
     return this.controls;
   }
 
+  /** Resets the camera controls and reconfigures them. */
+  public resetControls() {
+    this.controls.reset();
+    this.reconfigureControls();
+  }
+
   /**
    * Returns an object containing resize handlers for the camera.
    *

@@ -23,6 +23,8 @@ type GUICallbacks = {
 
   onClockChange?: (hours: number, minutes: number) => void;
   onNeutralChange?: (isNeutral: boolean) => void;
+
+  onReset?: () => void;
 };
 
 /*
@@ -36,7 +38,7 @@ function addTimeControls(
   onClockModeChange?: GUICallbacks["onClockModeChange"],
   onClockChange?: GUICallbacks["onClockChange"]
 ) {
-  folder
+  const clockGUI = folder
     .addBinding(params, "Clock", {
       options: {
         "Show Current Time": "current",
@@ -46,8 +48,8 @@ function addTimeControls(
     .on("change", (controller) => {
       timeFolder.hidden = controller.value !== "custom";
       onClockModeChange?.(controller.value as "current" | "custom", (hours, minutes) => {
-        hoursHandle.controller.value.setRawValue(hours);
-        minutesHandle.controller.value.setRawValue(minutes);
+        hoursGUI.controller.value.setRawValue(hours);
+        minutesGUI.controller.value.setRawValue(minutes);
       });
     });
 
@@ -55,18 +57,20 @@ function addTimeControls(
   timeFolder.hidden = params.Clock !== "custom";
 
   const hoursLimit = { min: 0, max: 23, step: 1 };
-  const hoursHandle = timeFolder
+  const hoursGUI = timeFolder
     .addBinding(params, "Hours", hoursLimit)
     .on("change", (controller) => {
       onClockChange?.(controller.value, params.Minutes);
     });
 
   const minutesLimit = { min: 0, max: 59, step: 1 };
-  const minutesHandle = timeFolder
+  const minutesGUI = timeFolder
     .addBinding(params, "Minutes", minutesLimit)
     .on("change", (controller) => {
       onClockChange?.(params.Hours, controller.value);
     });
+
+  return { clockGUI, hoursGUI, minutesGUI };
 }
 
 /**
@@ -79,7 +83,7 @@ function addCameraControls(
   folder: Pane | FolderApi,
   onCameraModeChange?: GUICallbacks["onCameraModeChange"]
 ) {
-  folder
+  const cameraGUI = folder
     .addBinding(params, "Camera", {
       options: {
         Perspective: "perspective",
@@ -93,6 +97,8 @@ function addCameraControls(
           : CameraMode.Orthographic
       );
     });
+
+  return { cameraGUI };
 }
 
 /**
@@ -105,9 +111,11 @@ function addStyleControls(
   folder: Pane | FolderApi,
   onNeutralChange?: GUICallbacks["onNeutralChange"]
 ) {
-  folder.addBinding(params, "Neutral").on("change", (controller) => {
+  const neutralGUI = folder.addBinding(params, "Neutral").on("change", (controller) => {
     onNeutralChange?.(controller.value);
   });
+
+  return { neutralGUI };
 }
 
 /**
@@ -118,11 +126,27 @@ function addStyleControls(
  */
 export function addControls(callbacks: GUICallbacks) {
   const general = globalPane.addFolder({ title: "Settings" });
-  addCameraControls(general, callbacks.onCameraModeChange);
-  addTimeControls(general, callbacks.onClockModeChange, callbacks.onClockChange);
+
+  const { cameraGUI } = addCameraControls(general, callbacks.onCameraModeChange);
+  const { clockGUI, hoursGUI, minutesGUI } = addTimeControls(
+    general,
+    callbacks.onClockModeChange,
+    callbacks.onClockChange
+  );
 
   const style = globalPane.addFolder({ title: "Style" });
-  addStyleControls(style, callbacks.onNeutralChange);
+  const { neutralGUI } = addStyleControls(style, callbacks.onNeutralChange);
+
+  const actions = globalPane.addFolder({ title: "Actions" });
+  actions.addButton({ title: "Reset Scene" }).on("click", () => {
+    cameraGUI.controller.value.setRawValue("perspective");
+    clockGUI.controller.value.setRawValue("current");
+    hoursGUI.controller.value.setRawValue(0);
+    minutesGUI.controller.value.setRawValue(0);
+    neutralGUI.controller.value.setRawValue(false);
+
+    callbacks.onReset?.();
+  });
 
   return globalPane;
 }

@@ -151,6 +151,10 @@ export class MyRoomScene extends Scene {
       onNeutralChange: (isNeutral) => {
         const mode = isNeutral ? "neutral" : "color";
         this.setSceneMaterials(mode);
+      },
+
+      onReset: () => {
+        this.resetCamera();
       }
     });
   }
@@ -359,5 +363,19 @@ export class MyRoomScene extends Scene {
     camera.controls.dolly(3, false);
 
     return camera;
+  }
+
+  /** Resets the camera to its default position and controls. */
+  private resetCamera() {
+    this.camera.switchTo(CameraMode.Perspective);
+    this.camera.resetControls();
+
+    // Initial camera placement.
+    this.camera.controls.setPosition(-4, 4, 4, false);
+    this.camera.controls.moveTo(0, 0.5, 0, false);
+    this.camera.controls.dolly(3, false);
+
+    // If we don't add this, for some reason the camera will start with a 360 rotation.
+    this.camera.controls.azimuthAngle = -Math.PI / 4;
   }
 }
