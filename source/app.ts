@@ -28,7 +28,7 @@ const scene = new MyRoomScene(renderer, target);
 await scene.prepare(onAssetLoaded);
 scene.setup();
 
-preload(renderer, scene, scene.camera.current, () => {
+preload(renderer, scene, scene.camera.perspective, () => {
   scene.onAfterUserInteracted();
   disposeSpotlight();
 

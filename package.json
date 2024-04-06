@@ -31,7 +31,6 @@
   },
   "dependencies": {
     "@biomejs/biome": "^1.6.3",
-    "@datastructures-js/priority-queue": "^6.3.1",
     "camelcase": "^8.0.0",
     "camera-controls": "^2.8.3",
     "gsap": "^3.12.5",

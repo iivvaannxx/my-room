@@ -1,12 +1,10 @@
 import {
   Box3,
-  CameraHelper,
   DoubleSide,
   type InstancedMesh,
   type Mesh,
   MeshBasicMaterial,
   type MeshBasicMaterialParameters,
-  PerspectiveCamera,
   Scene,
   type Texture,
   Vector2,
@@ -15,7 +13,7 @@ import {
 } from "three";
 
 import { loadModels, loadTextures, loadVideos } from "@app/assets/loaders";
-import { CameraMode, DoubleCamera } from "@app/experience/camera";
+import { SimpleCamera } from "@app/experience/camera";
 import { DigitalClock } from "@app/props/digital-clock";
 import { batchGLTFModel } from "@app/utils/batching";
 
@@ -64,7 +62,7 @@ export class MyRoomScene extends Scene {
   public readonly renderer: WebGLRenderer;
 
   // The camera and navigation controls.
-  public readonly camera: DoubleCamera;
+  public readonly camera: SimpleCamera;
 
   /** The container of the renderer. */
   public readonly target: HTMLElement;
@@ -115,7 +113,7 @@ export class MyRoomScene extends Scene {
     this._chair.update(totalTime);
 
     this.renderer.setViewport(0, 0, window.innerWidth, window.innerHeight);
-    this.renderer.render(this, this.camera.current);
+    this.renderer.render(this, this.camera.perspective);
   }
 
   /** Loads all the resources and creates the GUI controls. */
@@ -134,11 +132,6 @@ export class MyRoomScene extends Scene {
   /** Prepares the GUI options for the scene. */
   public setGUI() {
     addControls({
-      onCameraModeChange: (mode) => {
-        this.camera.switchTo(mode);
-        this.camera.controls.dollyToCursor = mode === CameraMode.Perspective;
-      },
-
       onClockModeChange: (mode, setUIValues) => {
         if (mode === "current") {
           this._clock.syncWithUserTime();
@@ -305,30 +298,14 @@ export class MyRoomScene extends Scene {
     const [aspect, near, far] = [width / height, 0.1, 1000];
 
     // We'll be using the two camera modes for this scene.
-    const camera = new DoubleCamera(CameraMode.Perspective, {
+    const camera = new SimpleCamera({
       perspective: [60, aspect, near, far]
     });
 
-    camera.orthographic.near = -5;
-    camera.orthographic.far = 10;
-
-    const handlers = camera.getResizeHandlers(this.renderer);
+    const handler = camera.getResizeHandler(this.renderer);
     const updateCameras = () => {
       const [width, height] = [window.innerWidth, window.innerHeight];
-
-      if (camera.mode === CameraMode.Perspective) {
-        handlers.perspectiveResize(width, height);
-      } else if (camera.mode === CameraMode.Orthographic) {
-        const target = camera.controls.getTarget(new Vector3());
-        const { size } = DoubleCamera.approximateOrthographicSizeFromPerspective(
-          camera.perspective,
-          camera.orthographic,
-          camera.perspective.position.distanceTo(target),
-          false
-        );
-
-        handlers.orthographicResize(width, height, size);
-      }
+      handler(width, height);
     };
 
     window.addEventListener("resize", updateCameras);
@@ -360,30 +337,19 @@ export class MyRoomScene extends Scene {
     controls.smoothTime = 0.325;
     controls.draggingSmoothTime = 0.15;
     controls.truckSpeed = 1.6;
-
-    controls.minZoom = 0.5;
-    controls.minDistance = 0.5;
+    controls.minDistance = 0.25;
     controls.maxDistance = 5;
-    controls.maxZoom = 5;
 
     // Initial camera placement.
     controls.setLookAt(-5, 5, 5, 0, 0.75, 0);
     controls.distance = controls.maxDistance;
     controls.azimuthAngle = -Math.PI / 4;
 
-    const target = controls.getTarget(new Vector3());
-    DoubleCamera.approximateOrthographicSizeFromPerspective(
-      camera.perspective,
-      camera.orthographic,
-      camera.perspective.position.distanceTo(target)
-    );
-
     controls.saveState();
   }
 
   /** Resets the camera to its default position and controls. */
   private resetCamera() {
-    this.camera.switchTo(CameraMode.Perspective);
     this.camera.resetControls();
 
     // Initial camera placement.

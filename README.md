@@ -33,7 +33,7 @@ This was my entry to the 9th edition of the challenges organised by <a href="htt
 
 <div align="center">
 
-![Showcase](.github/assets/output.gif "Showcase")
+![Showcase](.github/assets/preview.gif "Showcase")
 
 <p>
   <em>
@@ -57,13 +57,15 @@ Upon entering the scene, you will be presented with a loading screen, there are 
 
 - **Orbit Camera (Moving)**: Using the left mouse button (desktop) or 1 finger touch (mobile) and dragging.
 - **Truck Camera (Panning)**: Using the right mouse button (desktop) or 2/3 fingers touch (mobile) and dragging.
-- **Dolly Camera (Zooming)**: Using the mouse wheel, either scrolling or pressing it and dragging the mouse (desktop). 2 fingers pinch-in or out (mobile).
+- **Dolly Camera ("Zooming")**: Using the mouse wheel, either scrolling or pressing it and dragging the mouse (desktop). 2 fingers pinch-in or out (mobile).
 
 Made with the great [Camera Controls](https://github.com/yomotsu/camera-controls) library for Three.js.
 
 ## ✨ Features
 
-The UI panel on the top right is made with [Tweakpane](https://tweakpane.github.io/docs/). You can use it to interact with some objects in the scene! At the time of writing the following objects/options can be played with:
+The UI panel on the top right is made with [Tweakpane](https://tweakpane.github.io/docs/). You can use it to interact with some objects in the scene! At the time of writing the following objects/options can be played with are the ones listed below. 
+
+Initially there was also an option to change the projection between orthographic and perspective, but I didn't like having to manage two different cameras and I ended up removing this capability and the ortographic projection altogether because I didn't like it that much either. Perspective feels more natural, and ortographic was only there in the beginning to stick with the ***Isometric*** part of the challenge theme.
 
 - **Realtime Clock**: The clock over the shelves, should display the system time of the visitor's machine. You can also travel in time if you want, by changing it manually!
 

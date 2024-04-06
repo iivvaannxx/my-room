@@ -1,4 +1,3 @@
-import { CameraMode } from "@app/experience/camera";
 import { type FolderApi, Pane } from "tweakpane";
 
 /** The unique instance for our GUI pane. */
@@ -6,7 +5,6 @@ const globalPane = new Pane();
 
 /** All the tweakable params of the app. */
 const params = {
-  Camera: "perspective",
   Clock: "current",
   Hours: 0,
   Minutes: 0,
@@ -15,7 +13,6 @@ const params = {
 
 /** The callbacks fired when any of the general options change. */
 type GUICallbacks = {
-  onCameraModeChange?: (mode: CameraMode) => void;
   onClockModeChange?: (
     mode: "current" | "custom",
     setUIValues: (hours: number, minutes: number) => void
@@ -74,34 +71,6 @@ function addTimeControls(
 }
 
 /**
- * Adds camera controls to the given folder.
- *
- * @param folder - The pane or folder to add the camera controls to.
- * @param onCameraModeChange - Optional callback function to be called when the camera mode changes.
- */
-function addCameraControls(
-  folder: Pane | FolderApi,
-  onCameraModeChange?: GUICallbacks["onCameraModeChange"]
-) {
-  const cameraGUI = folder
-    .addBinding(params, "Camera", {
-      options: {
-        Perspective: "perspective",
-        Orthographic: "orthographic"
-      }
-    })
-    .on("change", (controller) => {
-      onCameraModeChange?.(
-        controller.value === "perspective"
-          ? CameraMode.Perspective
-          : CameraMode.Orthographic
-      );
-    });
-
-  return { cameraGUI };
-}
-
-/**
  * Adds style controls to the given folder.
  *
  * @param folder - The folder or pane to add the style controls to.
@@ -127,7 +96,6 @@ function addStyleControls(
 export function addControls(callbacks: GUICallbacks) {
   const general = globalPane.addFolder({ title: "Settings" });
 
-  const { cameraGUI } = addCameraControls(general, callbacks.onCameraModeChange);
   const { clockGUI, hoursGUI, minutesGUI } = addTimeControls(
     general,
     callbacks.onClockModeChange,
@@ -139,7 +107,6 @@ export function addControls(callbacks: GUICallbacks) {
 
   const actions = globalPane.addFolder({ title: "Actions" });
   actions.addButton({ title: "Reset Scene" }).on("click", () => {
-    cameraGUI.controller.value.setRawValue("perspective");
     clockGUI.controller.value.setRawValue("current");
     hoursGUI.controller.value.setRawValue(0);
     minutesGUI.controller.value.setRawValue(0);
