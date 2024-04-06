@@ -1,6 +1,8 @@
+import { normalize } from "@app/utils/math";
 import CameraControls from "camera-controls";
 import {
   Box3,
+  CameraHelper,
   Matrix4,
   OrthographicCamera,
   PerspectiveCamera,
@@ -52,11 +54,7 @@ type CameraParams = {
   orthographic?: OrthographicOptions | (() => OrthographicCamera);
 
   controls?: {
-    target?: HTMLElement;
-
-    configure?: (controls: CameraControls) => void;
-    configureForPerspective?: (controls: CameraControls) => void;
-    configureForOrthographic?: (controls: CameraControls) => void;
+    target: HTMLElement;
   };
 };
 
@@ -71,14 +69,14 @@ export class DoubleCamera {
   /** The type of camera currently in use. */
   private _mode: CameraMode;
 
-  /** The controls for the orthographic camera. */
-  private _orthoControls?: CameraControls;
+  /** The controls for the cameras. */
+  private _controls?: CameraControls;
 
-  /** The controls for the perspective camera. */
-  private _perspectiveControls?: CameraControls;
+  /** The last zoom value of the perspective camera. */
+  private _lastPerspectiveZoom = 1;
 
-  /** The function to reconfigure the camera controls. */
-  private reconfigureControls!: () => void;
+  /** The last zoom value of the orthographic camera. */
+  private _lastOrthoZoom = 1;
 
   /**
    * Gets the mode of the camera.
@@ -94,16 +92,11 @@ export class DoubleCamera {
    * @returns The camera controls.
    */
   public get controls() {
-    const controls =
-      this.mode === CameraMode.Perspective
-        ? this._perspectiveControls
-        : this._orthoControls;
-
-    if (!controls) {
+    if (!this._controls) {
       throw new Error("Controls not initialized.");
     }
 
-    return controls;
+    return this._controls;
   }
 
   /**
@@ -141,7 +134,7 @@ export class DoubleCamera {
         : new OrthographicCamera(...(orthographic ?? []));
 
     if (controls) {
-      this.initControls(controls);
+      this.initControls(controls.target);
     }
   }
 
@@ -157,30 +150,56 @@ export class DoubleCamera {
 
   /**
    * Switches the camera mode.
-   * @param mode The camera mode to switch to.
+   * @param newMode The camera mode to switch to.
    */
-  public switchTo(mode: CameraMode) {
-    if (mode === this._mode) {
+  public switchTo(newMode: CameraMode) {
+    if (newMode === this._mode) {
       return;
     }
+    // Some controls are lost when switching between modes, so we save them before change.
+    const prevControls = this.controls;
+    const azimuth = prevControls.azimuthAngle;
+    const polar = prevControls.polarAngle;
+    const [x, y, z] = prevControls.getPosition(new Vector3()).toArray();
 
-    if (this._orthoControls && this._perspectiveControls) {
-      const source =
-        mode === CameraMode.Perspective ? this._orthoControls : this._perspectiveControls;
-
-      const target =
-        mode === CameraMode.Perspective ? this._perspectiveControls : this._orthoControls;
-
-      // TODO: try to replicate the source state to the target without JSON.
-      // This overrides the settings of the target with the source settings.
-      const json = source.toJSON();
-      source.enabled = false;
-      target.fromJSON(json);
-      target.enabled = true;
+    if (newMode === CameraMode.Perspective) {
+      this.switchToPerspective();
+    } else {
+      this.switchToOrthographic();
     }
 
-    this._mode = mode;
-    this.reconfigureControls();
+    // And restore them after the change.
+    this.controls.setPosition(x, y, z);
+    this.controls.azimuthAngle = azimuth;
+    this.controls.polarAngle = polar;
+  }
+
+  private switchToPerspective() {
+    this.controls.mouseButtons.wheel = CameraControls.ACTION.DOLLY;
+    this.controls.touches.two = CameraControls.ACTION.TOUCH_DOLLY_TRUCK;
+
+    this._lastOrthoZoom = this.orthographic.zoom;
+    this.controls.camera = this.perspective;
+    this._mode = CameraMode.Perspective;
+
+    this.controls.zoomTo(this._lastPerspectiveZoom);
+  }
+
+  private switchToOrthographic() {
+    this.controls.mouseButtons.wheel = CameraControls.ACTION.ZOOM;
+    this.controls.touches.two = CameraControls.ACTION.TOUCH_ZOOM_TRUCK;
+
+    DoubleCamera.approximateOrthographicSizeFromPerspective(
+      this.perspective,
+      this.orthographic,
+      this.perspective.position.distanceTo(this.controls.getTarget(new Vector3()))
+    );
+
+    this._lastPerspectiveZoom = this.perspective.zoom;
+    this.controls.camera = this.orthographic;
+    this._mode = CameraMode.Orthographic;
+
+    this.controls.zoomTo(this._lastOrthoZoom);
   }
 
   /**
@@ -190,32 +209,11 @@ export class DoubleCamera {
    * @param controls - The camera controls configuration.
    * @returns The initialized camera controls.
    */
-  public initControls(controls?: CameraParams["controls"]) {
+  public initControls(target: HTMLElement) {
     ensureCameraControlsInstalled();
 
-    const orthoControls = new CameraControls(this.orthographic, controls?.target);
-    orthoControls.enabled = this.mode === CameraMode.Orthographic;
-    controls?.configureForOrthographic?.(orthoControls);
-    this._orthoControls = orthoControls;
-
-    const perspectiveControls = new CameraControls(this.perspective, controls?.target);
-    perspectiveControls.enabled = this.mode === CameraMode.Perspective;
-    controls?.configureForPerspective?.(perspectiveControls);
-    this._perspectiveControls = perspectiveControls;
-
-    // The general configure is for both controls.
-    controls?.configure?.(this._orthoControls);
-    controls?.configure?.(this._perspectiveControls);
-
-    this.reconfigureControls = () => {
-      if (this.mode === CameraMode.Perspective) {
-        controls?.configureForPerspective?.(perspectiveControls);
-      }
-
-      if (this.mode === CameraMode.Orthographic) {
-        controls?.configureForOrthographic?.(orthoControls);
-      }
-    };
+    const controls = new CameraControls(this.current, target);
+    this._controls = controls;
 
     return this.controls;
   }
@@ -223,7 +221,6 @@ export class DoubleCamera {
   /** Resets the camera controls and reconfigures them. */
   public resetControls() {
     this.controls.reset();
-    this.reconfigureControls();
   }
 
   /**
@@ -290,5 +287,46 @@ export class DoubleCamera {
       camera.updateProjectionMatrix();
       renderer.setSize(width, height);
     };
+  }
+
+  /**
+   * Calculates the approximate orthographic size from a perspective camera.
+   * @param perspective - The perspective camera to calculate the orthographic size from.
+   */
+  public static approximateOrthographicSizeFromPerspective(
+    from: PerspectiveCamera,
+    to: OrthographicCamera,
+    distance = from.position.z,
+    updateCamera = true
+  ) {
+    const fovInRadians = from.fov * (Math.PI / 180);
+    const visibleHeight = 2 * Math.tan(fovInRadians / 2) * distance;
+    const aspect = from.aspect;
+
+    const planes = {
+      top: visibleHeight / 2,
+      bottom: -visibleHeight / 2,
+      left: (-visibleHeight * aspect) / 2,
+      right: (visibleHeight * aspect) / 2,
+
+      zoom: 1
+    };
+
+    planes.zoom = Math.min(
+      (planes.right - planes.left) / (visibleHeight * aspect),
+      (planes.top - planes.bottom) / visibleHeight
+    );
+
+    if (updateCamera) {
+      to.top = planes.top;
+      to.bottom = planes.bottom;
+      to.left = planes.left;
+      to.right = planes.right;
+      to.zoom = planes.zoom;
+
+      to.updateProjectionMatrix();
+    }
+
+    return { size: visibleHeight, planes };
   }
 }

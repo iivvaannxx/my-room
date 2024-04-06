@@ -1,10 +1,12 @@
 import {
   Box3,
+  CameraHelper,
   DoubleSide,
   type InstancedMesh,
   type Mesh,
   MeshBasicMaterial,
   type MeshBasicMaterialParameters,
+  PerspectiveCamera,
   Scene,
   type Texture,
   Vector2,
@@ -91,22 +93,28 @@ export class MyRoomScene extends Scene {
     super();
 
     this.renderer = renderer;
+    this.renderer.autoClear = false;
     this.target = target;
 
     // We'll use the full window size.
     const [width, height] = [window.innerWidth, window.innerHeight];
     this.renderer.setSize(width, height);
-    this.renderer.setPixelRatio(window.devicePixelRatio);
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 3));
 
     target.appendChild(this.renderer.domElement);
+
     this.camera = this.prepareCamera();
+    this.setupCameraView();
   }
 
   /** Renders the scene using the current renderer and camera. */
   public update(delta: number, totalTime: number) {
-    this.camera.controls.update(delta);
+    this.renderer.clear();
+
+    this.camera.updateControls(delta);
     this._chair.update(totalTime);
 
+    this.renderer.setViewport(0, 0, window.innerWidth, window.innerHeight);
     this.renderer.render(this, this.camera.current);
   }
 
@@ -128,6 +136,7 @@ export class MyRoomScene extends Scene {
     addControls({
       onCameraModeChange: (mode) => {
         this.camera.switchTo(mode);
+        this.camera.controls.dollyToCursor = mode === CameraMode.Perspective;
       },
 
       onClockModeChange: (mode, setUIValues) => {
@@ -155,6 +164,7 @@ export class MyRoomScene extends Scene {
 
       onReset: () => {
         this.resetCamera();
+        this.camera.controls.distance = this.camera.controls.maxDistance;
       }
     });
   }
@@ -293,20 +303,14 @@ export class MyRoomScene extends Scene {
   private prepareCamera() {
     const { width, height } = this.renderer.getSize(new Vector2());
     const [aspect, near, far] = [width / height, 0.1, 1000];
-    const orthoSize = 6.5;
 
     // We'll be using the two camera modes for this scene.
     const camera = new DoubleCamera(CameraMode.Perspective, {
-      perspective: [75, aspect, near, far],
-      orthographic: [
-        (orthoSize * aspect) / -2,
-        (orthoSize * aspect) / 2,
-        orthoSize / 2,
-        orthoSize / -2,
-        -300,
-        300
-      ]
+      perspective: [60, aspect, near, far]
     });
+
+    camera.orthographic.near = -5;
+    camera.orthographic.far = 10;
 
     const handlers = camera.getResizeHandlers(this.renderer);
     const updateCameras = () => {
@@ -315,54 +319,66 @@ export class MyRoomScene extends Scene {
       if (camera.mode === CameraMode.Perspective) {
         handlers.perspectiveResize(width, height);
       } else if (camera.mode === CameraMode.Orthographic) {
-        handlers.orthographicResize(width, height, orthoSize);
+        const target = camera.controls.getTarget(new Vector3());
+        const { size } = DoubleCamera.approximateOrthographicSizeFromPerspective(
+          camera.perspective,
+          camera.orthographic,
+          camera.perspective.position.distanceTo(target),
+          false
+        );
+
+        handlers.orthographicResize(width, height, size);
       }
     };
 
     window.addEventListener("resize", updateCameras);
     window.addEventListener("orientationchange", updateCameras);
 
-    camera.current.lookAt(new Vector3(0, 2, 0));
-    camera.current.position.set(4, 4, 4);
+    return camera;
+  }
 
-    camera.initControls({
-      target: this.target,
+  /** Sets up the initial view of the scene.*/
+  private setupCameraView() {
+    const camera = this.camera;
+    camera.initControls(this.target);
 
-      configure: (controls) => {
-        const boxCenter = new Vector3(0, 1.25, 0);
-        const boxSize = new Vector3(1.75, 2.5, 1.75);
-        const box = new Box3();
+    const controls = camera.controls;
+    const boxCenter = new Vector3(0, 1.25, 0);
+    const boxSize = new Vector3(1.75, 2.5, 1.75);
+    const box = new Box3();
 
-        box.setFromCenterAndSize(boxCenter, boxSize);
-        controls.setBoundary(box);
+    // The boundary box for the camera.
+    box.setFromCenterAndSize(boxCenter, boxSize);
+    controls.setBoundary(box);
 
-        controls.minAzimuthAngle = -Math.PI / 2;
-        controls.maxAzimuthAngle = 0;
-        controls.maxPolarAngle = (Math.PI / 2) * 0.8;
-        controls.dollyToCursor = true;
-        controls.azimuthAngle = -Math.PI / 4;
+    // Arbitrary settings adjusted to this specific scene.
+    controls.minAzimuthAngle = -Math.PI / 2;
+    controls.maxAzimuthAngle = 0;
+    controls.maxPolarAngle = (Math.PI / 2) * 0.8;
+    controls.dollyToCursor = true;
+    controls.azimuthAngle = -Math.PI / 4;
+    controls.smoothTime = 0.325;
+    controls.draggingSmoothTime = 0.15;
+    controls.truckSpeed = 1.6;
 
-        controls.smoothTime = 0.325;
-        controls.draggingSmoothTime = 0.15;
-        controls.truckSpeed = 1.6;
-      },
-
-      configureForPerspective: (controls) => {
-        controls.minDistance = 0.75;
-        controls.maxDistance = 5;
-      },
-
-      configureForOrthographic: (controls) => {
-        controls.minZoom = 1;
-        controls.maxZoom = 8;
-      }
-    });
+    controls.minZoom = 0.5;
+    controls.minDistance = 0.5;
+    controls.maxDistance = 5;
+    controls.maxZoom = 5;
 
     // Initial camera placement.
-    camera.controls.moveTo(0, 0.5, 0, false);
-    camera.controls.dolly(3, false);
+    controls.setLookAt(-5, 5, 5, 0, 0.75, 0);
+    controls.distance = controls.maxDistance;
+    controls.azimuthAngle = -Math.PI / 4;
 
-    return camera;
+    const target = controls.getTarget(new Vector3());
+    DoubleCamera.approximateOrthographicSizeFromPerspective(
+      camera.perspective,
+      camera.orthographic,
+      camera.perspective.position.distanceTo(target)
+    );
+
+    controls.saveState();
   }
 
   /** Resets the camera to its default position and controls. */
@@ -371,11 +387,8 @@ export class MyRoomScene extends Scene {
     this.camera.resetControls();
 
     // Initial camera placement.
-    this.camera.controls.setPosition(-4, 4, 4, false);
-    this.camera.controls.moveTo(0, 0.5, 0, false);
-    this.camera.controls.dolly(3, false);
-
-    // If we don't add this, for some reason the camera will start with a 360 rotation.
+    this.camera.controls.setLookAt(-5, 5, 5, 0, 0.75, 0);
+    this.camera.controls.distance = this.camera.controls.maxDistance;
     this.camera.controls.azimuthAngle = -Math.PI / 4;
   }
 }
