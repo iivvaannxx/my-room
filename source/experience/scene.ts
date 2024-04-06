@@ -299,7 +299,7 @@ export class MyRoomScene extends Scene {
 
     // We'll be using the two camera modes for this scene.
     const camera = new SimpleCamera({
-      perspective: [60, aspect, near, far]
+      perspective: [50, aspect, near, far]
     });
 
     const handler = camera.getResizeHandler(this.renderer);
@@ -337,8 +337,8 @@ export class MyRoomScene extends Scene {
     controls.smoothTime = 0.325;
     controls.draggingSmoothTime = 0.15;
     controls.truckSpeed = 1.6;
-    controls.minDistance = 0.25;
-    controls.maxDistance = 5;
+    controls.minDistance = 0.65;
+    controls.maxDistance = 5.5;
 
     // Initial camera placement.
     controls.setLookAt(-5, 5, 5, 0, 0.75, 0);
