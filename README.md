@@ -63,9 +63,7 @@ Made with the great [Camera Controls](https://github.com/yomotsu/camera-controls
 
 ## ✨ Features
 
-The UI panel on the top right is made with [Tweakpane](https://tweakpane.github.io/docs/). You can use it to interact with some objects in the scene! At the time of writing the following objects/options can be played with are the ones listed below. 
-
-Initially there was also an option to change the projection between orthographic and perspective, but I didn't like having to manage two different cameras and I ended up removing this capability and the ortographic projection altogether because I didn't like it that much either. Perspective feels more natural, and ortographic was only there in the beginning to stick with the ***Isometric*** part of the challenge theme.
+The UI panel on the top right is made with [Tweakpane](https://tweakpane.github.io/docs/). You can use it to interact with some objects in the scene! At the time of writing the following objects/options can be played with are:
 
 - **Realtime Clock**: The clock over the shelves, should display the system time of the visitor's machine. You can also travel in time if you want, by changing it manually!
 
@@ -93,6 +91,11 @@ Initially there was also an option to change the projection between orthographic
 </div>
 
 <p></p>
+
+<hr style="border-bottom: 1px solid #30363d; height: 0px; opacity: 0.7020">
+
+Initially there was also an option to change the projection between orthographic and perspective, but I didn't like having to manage two different cameras and I ended up removing this capability and the ortographic projection altogether because I didn't like it that much either. Perspective feels more natural, and ortographic was only there in the beginning to stick with the ***Isometric*** part of the challenge theme.
+
 
 ## 🚀 Future Work
 
