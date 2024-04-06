@@ -46,7 +46,7 @@ type CameraParams = {
   };
 };
 
-/** Utility class to easily switch between orthographic and perspective rendering. */
+/** Utility class to easily manage a perspective camera. */
 export class SimpleCamera {
   /** The instance of the perspective camera. */
   public readonly perspective: PerspectiveCamera;
@@ -67,9 +67,7 @@ export class SimpleCamera {
     return this._controls;
   }
 
-  /* Creates a new camera instance.
-   *
-   * @param type The type of camera (Perspective or Orthographic).
+  /** Creates a new camera instance.
    * @param options The camera options.
    */
   public constructor(options: CameraParams) {
@@ -111,16 +109,16 @@ export class SimpleCamera {
     return this.controls;
   }
 
-  /** Resets the camera controls and reconfigures them. */
+  /** Resets the camera controls. */
   public resetControls() {
     this.controls.reset();
   }
 
   /**
-   * Returns an object containing resize handlers for the camera.
+   * Returns the handler to resize the camera if the dimensions change.
    *
    * @param renderer - The WebGL renderer.
-   * @returns An object with perspectiveResize and orthographicResize handlers.
+   * @returns The perspective resize handler function.
    */
   public getResizeHandler(renderer: WebGLRenderer) {
     return SimpleCamera.getPerspectiveResizeHandler(renderer, this.perspective);
